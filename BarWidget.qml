@@ -217,7 +217,7 @@ BarWidget {
     if (!entry) return ""
 
     var startupClass = String(entry.startupClass || "")
-    if (startupClass) {
+    if (startupClass && AppModel.plausibleWindowClass(startupClass)) {
       if (AppModel.defaultCovers(desktopId, startupClass)) return ""
       return "^" + AppModel.escapeRegex(startupClass) + "$"
     }

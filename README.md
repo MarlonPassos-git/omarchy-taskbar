@@ -9,6 +9,8 @@ shows what's running, and highlights the app you're currently focused on.
 Apps are pinned and unpinned from the bar itself. No config file editing
 required, though the config stays plain and hand-editable if you prefer it.
 
+![The taskbar in the Omarchy bar](docs/bar.png)
+
 Built as a third-party `bar-widget` plugin for `omarchy-shell` (Omarchy 4+).
 
 ## Install
@@ -31,6 +33,8 @@ omarchy bar move joeyvigil.taskbar --section left
 
 Both menus are the Omarchy menu in its select mode, so they search and look
 like everything else in the system.
+
+<img src="docs/picker.png" alt="Pinning an app from the bar" width="420">
 
 The `+` sits dimmed at the end of the strip and brightens on hover. Turn it off
 with `showAddButton` once you've settled on a set.

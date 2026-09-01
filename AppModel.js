@@ -173,6 +173,17 @@ function nextWindowIndex(windows, activeAddress, cycle) {
   return 0
 }
 
+// StartupWMClass is only worth trusting when it looks like a real class.
+// Arch's chromium.desktop ships `StartupWMClass=@@startup_wm_class`, an
+// unsubstituted packaging template; storing that as a match produces an entry
+// whose indicator can never fire. Anything that is not a plain class token
+// falls back to the desktop-id pattern, which is usually right anyway.
+function plausibleWindowClass(value) {
+  var text = String(value || "")
+  if (!text || text.length > 128) return false
+  return /^[A-Za-z0-9][A-Za-z0-9._+-]*$/.test(text)
+}
+
 // ------------------------------------------------------------------ editing
 
 function indexOfKey(records, key) {
