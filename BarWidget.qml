@@ -82,10 +82,23 @@ BarWidget {
       var exact = DesktopEntries.byId(id)
       if (exact) return exact
     } catch (e) { }
+    // heuristicLookup answers with *some* application rather than nothing, so
+    // before the entry index is warm it will hand back an unrelated app and we
+    // would paint its icon and name onto this slot. Keep the lookup — it is
+    // what resolves "firefox" to org.mozilla.firefox — but only accept a
+    // result whose id is actually related to the one asked for.
     try {
-      return DesktopEntries.heuristicLookup(id)
+      var guess = DesktopEntries.heuristicLookup(id)
+      if (guess && root.idsRelated(id, String(guess.id || ""))) return guess
     } catch (e) { }
     return null
+  }
+
+  function idsRelated(wanted, found) {
+    if (!wanted || !found) return false
+    var a = wanted.toLowerCase()
+    var b = found.toLowerCase()
+    return a === b || a.indexOf(b) !== -1 || b.indexOf(a) !== -1
   }
 
   function desktopEntry(record) {
