@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "joeyvigil.taskbar",
+  "name": "Taskbar",
+  "version": "0.1.0",
+  "author": "Joey Vigil",
+  "license": "MIT",
+  "description": "Pinned app icons in the bar with running-state indicators; click to launch or focus",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Taskbar",
+    "description": "Pinned app icons with running indicators; left = launch or focus, right = new instance",
+    "category": "Launcher",
+    "allowMultiple": true,
+    "defaultSection": "left",
+    "defaults": {
+      "apps": [],
+      "iconSize": 17,
+      "spacing": 2,
+      "runningIndicator": true,
+      "dimWhenClosed": true,
+      "cycleWindows": true
+    },
+    "schema": [
+      {
+        "key": "apps",
+        "type": "array",
+        "label": "Pinned apps"
+      },
+      {
+        "key": "iconSize",
+        "type": "number",
+        "label": "Icon size (px)"
+      },
+      {
+        "key": "spacing",
+        "type": "number",
+        "label": "Gap between icons (px)"
+      },
+      {
+        "key": "runningIndicator",
+        "type": "bool",
+        "label": "Show running indicator"
+      },
+      {
+        "key": "dimWhenClosed",
+        "type": "bool",
+        "label": "Dim icons for apps that are not running"
+      },
+      {
+        "key": "cycleWindows",
+        "type": "bool",
+        "label": "Re-clicking a focused app cycles its windows"
+      }
+    ]
+  }
+}
