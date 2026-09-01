@@ -20,6 +20,28 @@ omarchy plugin add https://github.com/joeyvigil/omarchy-taskbar.git --enable --y
 omarchy bar move io.github.joeyvigil.taskbar --section left
 ```
 
+## Requirements
+
+- Omarchy 4+ (`omarchy-shell`), which provides the bar and the plugin host.
+- The built-in `omarchy.menu` plugin, enabled. The `+` and the right-click
+  actions are rendered by summoning it in select mode; with it disabled the
+  icons still launch and focus, but the editing menus will not open.
+- `jq`, used by `bin/taskbar-pick`. It is already a hard dependency of
+  `omarchy` itself, so it is present on any Omarchy system.
+
+No other external tools, services, or network access.
+
+## Remove
+
+```bash
+omarchy plugin remove io.github.joeyvigil.taskbar
+```
+
+That unregisters the widget and deletes the checkout. Removal takes the pin
+list with it, because Omarchy stores widget settings inline on the bar layout
+entry — copy the `apps` array out of `~/.config/omarchy/shell.json` first if
+you want to keep it.
+
 ## Using it
 
 | Input | What it does |
