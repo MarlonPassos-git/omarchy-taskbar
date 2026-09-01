@@ -14,7 +14,7 @@ Built as a third-party `bar-widget` plugin for `omarchy-shell` (Omarchy 4+).
 ## Install
 
 ```bash
-omarchy plugin add https://github.com/<you>/omarchy-taskbar.git --enable --yes
+omarchy plugin add https://github.com/joeyvigil/omarchy-taskbar.git --enable --yes
 omarchy bar move joeyvigil.taskbar --section left
 ```
 
