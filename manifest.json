@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "joeyvigil.taskbar",
   "name": "Taskbar",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "Joey Vigil",
   "license": "MIT",
-  "description": "Pinned app icons in the bar with running-state indicators; click to launch or focus",
+  "description": "Pinned app icons in the bar with running-state indicators; pin and unpin from the bar itself",
   "kinds": [
     "bar-widget"
   ],
@@ -14,9 +14,9 @@
   },
   "barWidget": {
     "displayName": "Taskbar",
-    "description": "Pinned app icons with running indicators; left = launch or focus, right = new instance",
+    "description": "Pinned app icons with running indicators; left = launch or focus, right = actions, middle = new instance",
     "category": "Launcher",
-    "allowMultiple": true,
+    "allowMultiple": false,
     "defaultSection": "left",
     "defaults": {
       "apps": [],
@@ -24,7 +24,8 @@
       "spacing": 2,
       "runningIndicator": true,
       "dimWhenClosed": true,
-      "cycleWindows": true
+      "cycleWindows": true,
+      "showAddButton": true
     },
     "schema": [
       {
@@ -56,6 +57,11 @@
         "key": "cycleWindows",
         "type": "bool",
         "label": "Re-clicking a focused app cycles its windows"
+      },
+      {
+        "key": "showAddButton",
+        "type": "bool",
+        "label": "Show the + button for pinning apps"
       }
     ]
   }

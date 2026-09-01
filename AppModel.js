@@ -38,27 +38,60 @@ function idVariants(desktopId) {
   return variants
 }
 
-// A record's `match` is a user-supplied regex when present, otherwise an
-// alternation over the desktop id variants. Anchored on word boundaries the
-// same way omarchy-launch-or-focus does, so "code" does not match "codes".
-function buildPattern(record) {
-  if (record.match) return record.match
-  var variants = idVariants(record.desktopId)
+// The derived pattern for an entry with no explicit `match`: an alternation
+// over the desktop id variants, anchored on word boundaries the same way
+// omarchy-launch-or-focus does, so "code" does not match "codes".
+function defaultPattern(desktopId) {
+  var variants = idVariants(desktopId)
   if (variants.length === 0) return ""
   var escaped = []
   for (var i = 0; i < variants.length; i++) escaped.push(escapeRegex(variants[i]))
-  return "(" + escaped.join("|") + ")"
+  return "\\b(" + escaped.join("|") + ")\\b"
 }
 
+// An explicit `match` is used as a raw regex, deliberately without the word
+// boundaries the derived pattern adds. Auto-filled web app patterns end
+// mid-token (chrome-discord.com__channels_@me-Default), where a trailing \b
+// would never fire because "_" is a word character.
 function matcherFor(record) {
-  var pattern = buildPattern(record)
+  var pattern = record.match ? String(record.match) : defaultPattern(record.desktopId)
   if (!pattern) return null
   try {
-    return new RegExp("\\b" + pattern + "\\b", "i")
+    return new RegExp(pattern, "i")
   } catch (e) {
     // A bad user regex should disable that one button, not break the bar.
     return null
   }
+}
+
+// True when the derived pattern already covers this window class, meaning the
+// entry needs no explicit match stored.
+function defaultCovers(desktopId, cls) {
+  var pattern = defaultPattern(desktopId)
+  if (!pattern || !cls) return false
+  try {
+    return new RegExp(pattern, "i").test(String(cls))
+  } catch (e) {
+    return false
+  }
+}
+
+// Omarchy web apps run through Chromium's --app mode, which builds the window
+// class as chrome-<host>__<first-path-segment>...-Default. Host alone would
+// collide across apps on one domain (Google Maps vs Google Photos), so keep
+// the first path segment too.
+function webappPattern(execString) {
+  var exec = String(execString || "")
+  if (exec.indexOf("omarchy-launch-webapp") === -1) return ""
+  var found = /https?:\/\/([^\s"']+)/.exec(exec)
+  if (!found) return ""
+  var target = found[1].replace(/\/+$/, "")
+  var slash = target.indexOf("/")
+  if (slash === -1) return escapeRegex(target)
+  var host = target.substring(0, slash)
+  var segment = target.substring(slash + 1).split("/")[0]
+  if (!segment) return escapeRegex(host)
+  return escapeRegex(host + "__" + segment)
 }
 
 // Accepts either a bare string ("chromium") or a full object. Everything the
@@ -138,4 +171,55 @@ function nextWindowIndex(windows, activeAddress, cycle) {
     if (windows[i].address === activeAddress) return (i + 1) % windows.length
   }
   return 0
+}
+
+// ------------------------------------------------------------------ editing
+
+function indexOfKey(records, key) {
+  var all = toArray(records)
+  for (var i = 0; i < all.length; i++) {
+    if (all[i] && all[i].key === key) return i
+  }
+  return -1
+}
+
+function hasDesktopId(records, desktopId) {
+  var all = toArray(records)
+  for (var i = 0; i < all.length; i++) {
+    if (all[i] && all[i].desktopId === desktopId) return true
+  }
+  return false
+}
+
+// Move the entry at `index` by `delta` slots, clamped. Returns a new array.
+function movedRecords(records, index, delta) {
+  var all = toArray(records).slice()
+  var target = index + delta
+  if (index < 0 || index >= all.length) return all
+  if (target < 0 || target >= all.length) return all
+  var moved = all.splice(index, 1)[0]
+  all.splice(target, 0, moved)
+  return all
+}
+
+// Back to the shape shell.json wants. Entries carrying nothing but a desktop
+// id collapse to the bare string form, so hand-written configs stay readable
+// after the UI has edited them.
+function serialize(records) {
+  var all = toArray(records)
+  var out = []
+  for (var i = 0; i < all.length; i++) {
+    var record = all[i]
+    if (!record) continue
+    var object = {}
+    var decorated = false
+    if (record.desktopId) object.desktopId = record.desktopId
+    if (record.match) { object.match = record.match; decorated = true }
+    if (record.exec) { object.exec = record.exec; decorated = true }
+    if (record.icon) { object.icon = record.icon; decorated = true }
+    if (record.label) { object.label = record.label; decorated = true }
+    if (record.matchTitle) { object.matchTitle = true; decorated = true }
+    out.push(!decorated && record.desktopId ? record.desktopId : object)
+  }
+  return out
 }

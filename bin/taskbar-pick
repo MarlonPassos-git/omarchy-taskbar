@@ -1,0 +1,38 @@
+#!/bin/bash
+# Show a list in the Omarchy menu and print the chosen row on stdout.
+#
+# Usage: taskbar-pick <prompt> <option>...
+#
+# Each option is "<glyph>\t<label>\t<value>" — the menu strips the glyph and
+# returns "<label>\t<value>", so callers read the value off the last field.
+# Exits silently with no output when the user cancels.
+
+set -euo pipefail
+
+prompt="${1:-Select}"
+shift || true
+(($# > 0)) || exit 0
+
+selection_file=$(mktemp)
+done_file=$(mktemp)
+rm -f "$done_file"
+trap 'rm -f "$selection_file" "$done_file"' EXIT
+
+payload=$(printf '%s\n' "$@" | jq -R -s \
+  --arg prompt "$prompt" \
+  --arg selection "$selection_file" \
+  --arg done "$done_file" \
+  '{mode:"select", prompt:$prompt, options:(rtrimstr("\n")|split("\n")),
+    selectionFile:$selection, doneFile:$done, width:460}')
+
+omarchy-shell shell summon omarchy.menu "$payload" >/dev/null 2>&1 || exit 0
+
+# The menu touches done_file on both pick and cancel. Cap the wait so a menu
+# that never opens cannot leave this process resident forever.
+for _ in $(seq 1 12000); do
+  [[ -e $done_file ]] && break
+  sleep 0.05
+done
+
+[[ -s $selection_file ]] && cat "$selection_file"
+exit 0
