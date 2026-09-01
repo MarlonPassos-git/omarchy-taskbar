@@ -20,7 +20,7 @@ import "AppModel.js" as AppModel
 // `omarchy bar set`, so shell.json stays the single source of truth.
 BarWidget {
   id: root
-  moduleName: "joeyvigil.taskbar"
+  moduleName: "io.github.joeyvigil.taskbar"
 
   // AppLibrary owns desktop-entry icon resolution (including the on-disk index
   // that catches icons Qt's cache missed). The bar hands us the shell root.
@@ -173,39 +173,50 @@ BarWidget {
 
   // ----------------------------------------------------------------- editing
 
-  // Write the whole list back through the shell's own config mutator, which
-  // deep-clones, applies, and persists shell.json. The shell then pushes the
-  // new settings back down, so there is exactly one direction of data flow.
+  function layoutEntryIn(config) {
+    var layout = config && config.bar ? config.bar.layout : null
+    if (!layout) return null
+    var sections = ["left", "center", "right"]
+    for (var s = 0; s < sections.length; s++) {
+      var list = layout[sections[s]]
+      if (!Array.isArray(list)) continue
+      for (var i = 0; i < list.length; i++) {
+        var entry = list[i]
+        if (entry && Util.canonicalWidgetId(String(entry.id || "")) === root.moduleName) return entry
+      }
+    }
+    return null
+  }
+
+  // Apply an edit to the pin list.
+  //
+  // `operation` receives the list as it is *stored*, read fresh inside the
+  // mutator, and returns the new list (or null to decline). It deliberately
+  // does not receive root.pinned: a bar surface exists per monitor and reloads
+  // leave instances behind, so this widget's settings can be empty on an
+  // instance that never had them injected. Building the write from that would
+  // persist an empty list and silently destroy the user's pins.
   //
   // `omarchy bar set --json` would be the tidier public seam, but it cannot
   // carry this value: it forwards through `qs ipc call`, which splits every
   // argument on commas, so any array past one element arrives as extra
   // positional arguments and the call is rejected.
-  function persist(records) {
-    var payload = AppModel.serialize(records)
+  function mutateApps(operation) {
     var host = root.bar ? root.bar.shell : null
     if (!host || typeof host.mutateShellConfig !== "function") {
-      console.warn("taskbar: no shell config mutator, cannot persist pins")
+      console.warn("taskbar: no shell config mutator, refusing to edit pins")
       return
     }
 
     host.mutateShellConfig(function(config) {
-      var layout = config && config.bar ? config.bar.layout : null
-      if (!layout) return
-      var sections = ["left", "center", "right"]
-      for (var s = 0; s < sections.length; s++) {
-        var list = layout[sections[s]]
-        if (!Array.isArray(list)) continue
-        for (var i = 0; i < list.length; i++) {
-          var entry = list[i]
-          if (!entry) continue
-          if (Util.canonicalWidgetId(String(entry.id || "")) === root.moduleName) {
-            entry.apps = payload
-            return
-          }
-        }
+      var entry = root.layoutEntryIn(config)
+      if (!entry) {
+        console.warn("taskbar: no layout entry for " + root.moduleName + ", pins not saved")
+        return
       }
-      console.warn("taskbar: no layout entry for " + root.moduleName + ", pins not saved")
+      var next = operation(AppModel.normalizeApps(entry.apps))
+      if (!next) return
+      entry.apps = AppModel.serialize(next)
     })
   }
 
@@ -235,29 +246,39 @@ BarWidget {
   function pinApp(desktopId) {
     var id = String(desktopId || "")
     if (!id) return "no id"
-    if (AppModel.hasDesktopId(root.pinned, id)) return "already pinned"
 
     var record = { desktopId: id }
     var match = root.smartMatch(id)
     if (match) record.match = match
 
-    var records = root.pinned.slice()
-    records.push(record)
-    root.persist(records)
-    return "ok"
+    var outcome = "ok"
+    root.mutateApps(function(current) {
+      if (AppModel.hasDesktopId(current, id)) {
+        outcome = "already pinned"
+        return null
+      }
+      var next = current.slice()
+      next.push(record)
+      return next
+    })
+    return outcome
   }
 
   function unpinApp(desktopId) {
     var id = String(desktopId || "")
-    var records = root.pinned.slice()
-    for (var i = 0; i < records.length; i++) {
-      if (records[i].desktopId === id) {
-        records.splice(i, 1)
-        root.persist(records)
-        return "ok"
+    var outcome = "not pinned"
+    root.mutateApps(function(current) {
+      for (var i = 0; i < current.length; i++) {
+        if (current[i].desktopId === id) {
+          var next = current.slice()
+          next.splice(i, 1)
+          outcome = "ok"
+          return next
+        }
       }
-    }
-    return "not pinned"
+      return null
+    })
+    return outcome
   }
 
   // ------------------------------------------------------------------ picker
@@ -323,22 +344,26 @@ BarWidget {
   }
 
   function runAction(key, action) {
-    var index = AppModel.indexOfKey(root.pinned, key)
-    if (index < 0) return
-    var records = root.pinned.slice()
-
+    // Launching reads nothing back, so the local list is fine for it.
     if (action === "launch") {
-      root.launch(records[index])
+      var local = AppModel.indexOfKey(root.pinned, key)
+      if (local >= 0) root.launch(root.pinned[local])
       return
     }
-    if (action === "unpin") {
-      records.splice(index, 1)
-      root.persist(records)
-      return
-    }
-    if (action === "back" || action === "forward") {
-      root.persist(AppModel.movedRecords(records, index, action === "back" ? -1 : 1))
-    }
+
+    // Everything else edits the list, so it works against stored state.
+    root.mutateApps(function(current) {
+      var index = AppModel.indexOfKey(current, key)
+      if (index < 0) return null
+      if (action === "unpin") {
+        var next = current.slice()
+        next.splice(index, 1)
+        return next
+      }
+      if (action === "back") return AppModel.movedRecords(current, index, -1)
+      if (action === "forward") return AppModel.movedRecords(current, index, 1)
+      return null
+    })
   }
 
   implicitWidth: layout.implicitWidth
@@ -355,7 +380,7 @@ BarWidget {
   }
 
   IpcHandler {
-    target: "joeyvigil.taskbar"
+    target: "io.github.joeyvigil.taskbar"
 
     function pin(desktopId: string): string { return root.pinApp(desktopId) }
     function unpin(desktopId: string): string { return root.unpinApp(desktopId) }

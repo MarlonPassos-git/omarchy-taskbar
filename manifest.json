@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "id": "joeyvigil.taskbar",
+  "id": "io.github.joeyvigil.taskbar",
   "name": "Taskbar",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": "Joey Vigil",
   "license": "MIT",
   "description": "Pinned app icons in the bar with running-state indicators; pin and unpin from the bar itself",

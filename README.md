@@ -17,7 +17,7 @@ Built as a third-party `bar-widget` plugin for `omarchy-shell` (Omarchy 4+).
 
 ```bash
 omarchy plugin add https://github.com/joeyvigil/omarchy-taskbar.git --enable --yes
-omarchy bar move joeyvigil.taskbar --section left
+omarchy bar move io.github.joeyvigil.taskbar --section left
 ```
 
 ## Using it
@@ -56,10 +56,10 @@ what a window class is.
 ### From the command line
 
 ```bash
-omarchy-shell joeyvigil.taskbar list             # current pins, as JSON
-omarchy-shell joeyvigil.taskbar pin obsidian     # pin by desktop entry id
-omarchy-shell joeyvigil.taskbar unpin obsidian   # unpin
-omarchy-shell joeyvigil.taskbar add              # open the pin picker
+omarchy-shell io.github.joeyvigil.taskbar list             # current pins, as JSON
+omarchy-shell io.github.joeyvigil.taskbar pin obsidian     # pin by desktop entry id
+omarchy-shell io.github.joeyvigil.taskbar unpin obsidian   # unpin
+omarchy-shell io.github.joeyvigil.taskbar add              # open the pin picker
 ```
 
 Handy for keybindings, or for adding a "Pin app to taskbar" entry to
@@ -72,7 +72,7 @@ which hot-reloads on save. The UI writes to this same place.
 
 ```json
 {
-  "id": "joeyvigil.taskbar",
+  "id": "io.github.joeyvigil.taskbar",
   "apps": ["Alacritty", "chromium", "code"],
   "iconSize": 17,
   "spacing": 2,
@@ -92,6 +92,11 @@ which hot-reloads on save. The UI writes to this same place.
 | `dimWhenClosed` | `true` | Fade icons for apps with no open window |
 | `cycleWindows` | `true` | Re-clicking a focused app advances to its next window |
 | `showAddButton` | `true` | Show the trailing `+` for pinning apps |
+
+> **Disabling the widget discards your pins.** Omarchy stores widget settings
+> inline on the bar layout entry, and disabling removes that entry. This is how
+> every bar widget behaves, but here it means the whole pin list. Copy the
+> `apps` array first if you plan to disable and re-enable.
 
 ### Pinned entries
 
