@@ -1,5 +1,4 @@
 {
-  "$schema": "https://raw.githubusercontent.com/joeyvigil/omarchy-taskbar/master/manifest.schema.json",
   "schemaVersion": 1,
   "id": "io.github.joeyvigil.taskbar",
   "name": "Taskbar",
@@ -9,7 +8,6 @@
     "Marlon Passos"
   ],
   "license": "MIT",
-  "repository": "https://github.com/joeyvigil/omarchy-taskbar",
   "description": "Pinned app icons with running indicators and optional dedicated named workspaces",
   "kinds": [
     "bar-widget"
