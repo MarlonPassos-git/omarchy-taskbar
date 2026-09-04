@@ -47,6 +47,10 @@ background windows move silently. Existing matching windows are also assigned
 when the setting is enabled or the shell starts. Manual moves remain possible.
 The named workspace disappears naturally after its last window closes.
 
+| Enable a dedicated workspace | Remove the dedicated workspace |
+|---|---|
+| <img src="docs/use-dedicated-workspace.png" alt="Use dedicated workspace action in the Obsidian taskbar menu" width="400"> | <img src="docs/remove-dedicated-workspace.png" alt="Remove dedicated workspace action in the Obsidian taskbar menu" width="400"> |
+
 ## Settings
 
 Stored inline on the widget's entry in `~/.config/omarchy/shell.json`, which
