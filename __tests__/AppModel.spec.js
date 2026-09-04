@@ -60,6 +60,17 @@ test("builds a named workspace selector", () => {
   assert.equal(AppModel.workspaceTarget({ workspace: "" }), "")
 })
 
+test("builds workspace actions with window icons", () => {
+  assert.equal(
+    AppModel.workspaceActionOption({ workspace: "Obsidian" }),
+    "󰖭\tRemove dedicated workspace\tworkspace-off"
+  )
+  assert.equal(
+    AppModel.workspaceActionOption({ workspace: "" }),
+    "󰖮\tUse dedicated workspace\tworkspace-on"
+  )
+})
+
 test("plans every matching window into the app workspace", () => {
   const records = AppModel.normalizeApps([{ desktopId: "obsidian", workspace: "Obsidian" }])
   const windows = [
