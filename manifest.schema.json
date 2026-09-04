@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/MarlonPassos-git/omarchy-taskbar/master/manifest.schema.json",
+  "$id": "https://raw.githubusercontent.com/joeyvigil/omarchy-taskbar/master/manifest.schema.json",
   "$comment": "Mirrors Omarchy manifest v1: https://github.com/basecamp/omarchy/blob/quattro/shell/services/PluginRegistry.qml",
   "title": "Omarchy plugin manifest v1",
   "type": "object",
