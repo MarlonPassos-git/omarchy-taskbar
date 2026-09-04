@@ -58,7 +58,7 @@ test("serializes the workspace assignment with the pinned app", () => {
 
 test("escapes workspace values in the Hyprland Lua dispatcher", () => {
   const move = {
-    address: "0xabc",
+    address: "abc",
     workspace: "name:Bob's \"Notes\"\\Archive",
     follow: true
   }
@@ -67,6 +67,12 @@ test("escapes workspace values in the Hyprland Lua dispatcher", () => {
     AppModel.workspaceDispatcher(move),
     "hl.dsp.window.move({ workspace = \"name:Bob's \\\"Notes\\\"\\\\Archive\", window = \"address:0xabc\", follow = true })"
   )
+})
+
+test("normalizes Quickshell window addresses for Hyprland", () => {
+  assert.equal(AppModel.hyprlandAddressSelector("55a2701f33a0"), "address:0x55a2701f33a0")
+  assert.equal(AppModel.hyprlandAddressSelector("0x55a2701f33a0"), "address:0x55a2701f33a0")
+  assert.equal(AppModel.hyprlandAddressSelector(""), "")
 })
 
 test("quotes arbitrary text as a Lua string", () => {
