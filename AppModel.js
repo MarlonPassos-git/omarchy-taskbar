@@ -35,6 +35,13 @@ function workspaceTarget(record) {
   return name ? "name:" + name : ""
 }
 
+// Builds the visible workspace action with an icon matching its result.
+// Example: workspaceActionOption({ workspace: "Notes" }) returns the remove action.
+function workspaceActionOption(record) {
+  if (record && record.workspace) return "󰖭\tRemove dedicated workspace\tworkspace-off"
+  return "󰖮\tUse dedicated workspace\tworkspace-on"
+}
+
 function luaQuoted(value) {
   var text = String(value || "")
   var escaped = text.replace(/\\/g, "\\\\").replace(/"/g, '\\"')

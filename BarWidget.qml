@@ -327,11 +327,7 @@ BarWidget {
     if (index < 0) return
 
     var options = ["\tNew instance\tlaunch"]
-    if (record.workspace) {
-      options.push("󰆾\tRemove dedicated workspace (" + record.workspace + ")\tworkspace-off")
-    } else {
-      options.push("󰆾\tUse dedicated workspace\tworkspace-on")
-    }
+    options.push(AppModel.workspaceActionOption(record))
     if (index > 0) options.push("\t" + (root.vertical ? "Move up" : "Move left") + "\tback")
     if (index < root.pinned.length - 1) options.push("\t" + (root.vertical ? "Move down" : "Move right") + "\tforward")
     options.push("\tUnpin\tunpin")
