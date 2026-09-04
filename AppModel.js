@@ -5,7 +5,7 @@
 //
 // Deliberately free of QML globals so it can stay a `.pragma library` shared
 // across every bar instance. The widget hands in plain window descriptors
-// ({ address, appId, cls, title }) rather than live Hyprland objects.
+// ({ address, appId, cls, title, workspace }) rather than live Hyprland objects.
 
 // Settings arriving from shell.json have round-tripped through a QML
 // `property var`, which stores JS arrays as QVariantList. Reading one back
@@ -23,6 +23,30 @@ function toArray(value) {
 
 function escapeRegex(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function normalizeWorkspaceName(value) {
+  var text = String(value || "").replace(/[\u0000-\u001f\u007f,]/g, "-")
+  return text.trim().replace(/\s+/g, " ")
+}
+
+function workspaceTarget(record) {
+  var name = normalizeWorkspaceName(record && record.workspace)
+  return name ? "name:" + name : ""
+}
+
+function luaQuoted(value) {
+  var text = String(value || "")
+  var escaped = text.replace(/\\/g, "\\\\").replace(/"/g, '\\"')
+  return '"' + escaped.replace(/\n/g, "\\n").replace(/\r/g, "\\r") + '"'
+}
+
+function workspaceDispatcher(move) {
+  if (!move || !move.workspace || !move.address) return ""
+  var workspace = luaQuoted(move.workspace)
+  var window = luaQuoted("address:" + move.address)
+  var follow = move.follow ? "true" : "false"
+  return "hl.dsp.window.move({ workspace = " + workspace + ", window = " + window + ", follow = " + follow + " })"
 }
 
 // "org.telegram.desktop" -> "desktop" is useless as a match, but for ids like
@@ -109,7 +133,8 @@ function normalizeApp(entry, index) {
       exec: String(entry.exec || ""),
       icon: String(entry.icon || ""),
       label: String(entry.label || entry.tooltip || ""),
-      matchTitle: entry.matchTitle === true
+      matchTitle: entry.matchTitle === true,
+      workspace: normalizeWorkspaceName(entry.workspace)
     }
   }
 
@@ -121,6 +146,7 @@ function normalizeApp(entry, index) {
   record.icon = String(record.icon || "")
   record.label = String(record.label || "")
   record.matchTitle = record.matchTitle === true
+  record.workspace = normalizeWorkspaceName(record.workspace)
 
   // Nothing to launch and nothing to match against — drop it rather than
   // rendering a dead button.
@@ -159,6 +185,27 @@ function windowsFor(record, windows) {
     if (windowMatches(record, matcher, all[i])) out.push(all[i])
   }
   return out
+}
+
+function workspaceMoves(records, windows, activeAddress) {
+  var apps = toArray(records)
+  var open = toArray(windows)
+  var claimed = {}
+  var moves = []
+  for (var i = 0; i < apps.length; i++) {
+    var target = workspaceTarget(apps[i])
+    if (!target) continue
+    var matched = windowsFor(apps[i], open)
+    for (var j = 0; j < matched.length; j++) {
+      var address = String(matched[j].address || "")
+      if (!address || claimed[address]) continue
+      claimed[address] = true
+      var current = String(matched[j].workspace || "")
+      if (current === target || current === target.substring(5)) continue
+      moves.push({ address: address, workspace: target, follow: address === String(activeAddress || "") })
+    }
+  }
+  return moves
 }
 
 // Index of the window to focus. Without cycling that is always the first
@@ -213,6 +260,17 @@ function movedRecords(records, index, delta) {
   return all
 }
 
+function updatedWorkspace(records, index, workspace) {
+  var all = toArray(records).slice()
+  if (index < 0 || index >= all.length || !all[index]) return all
+  var current = all[index]
+  var next = {}
+  for (var field in current) next[field] = current[field]
+  next.workspace = normalizeWorkspaceName(workspace)
+  all[index] = next
+  return all
+}
+
 // Back to the shape shell.json wants. Entries carrying nothing but a desktop
 // id collapse to the bare string form, so hand-written configs stay readable
 // after the UI has edited them.
@@ -230,6 +288,7 @@ function serialize(records) {
     if (record.icon) { object.icon = record.icon; decorated = true }
     if (record.label) { object.label = record.label; decorated = true }
     if (record.matchTitle) { object.matchTitle = true; decorated = true }
+    if (record.workspace) { object.workspace = record.workspace; decorated = true }
     out.push(!decorated && record.desktopId ? record.desktopId : object)
   }
   return out
