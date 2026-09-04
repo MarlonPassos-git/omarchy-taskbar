@@ -41,10 +41,17 @@ function luaQuoted(value) {
   return '"' + escaped.replace(/\n/g, "\\n").replace(/\r/g, "\\r") + '"'
 }
 
+function hyprlandAddressSelector(value) {
+  var address = String(value || "").trim()
+  if (!address) return ""
+  var normalized = /^0x/i.test(address) ? address : "0x" + address
+  return "address:" + normalized
+}
+
 function workspaceDispatcher(move) {
   if (!move || !move.workspace || !move.address) return ""
   var workspace = luaQuoted(move.workspace)
-  var window = luaQuoted("address:" + move.address)
+  var window = luaQuoted(hyprlandAddressSelector(move.address))
   var follow = move.follow ? "true" : "false"
   return "hl.dsp.window.move({ workspace = " + workspace + ", window = " + window + ", follow = " + follow + " })"
 }
