@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/MarlonPassos-git/omarchy-taskbar/master/manifest.schema.json",
+  "$comment": "Mirrors Omarchy manifest v1: https://github.com/basecamp/omarchy/blob/quattro/shell/services/PluginRegistry.qml",
+  "title": "Omarchy plugin manifest v1",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "name",
+    "version",
+    "kinds",
+    "entryPoints"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^(?!omarchy\\.)(?!.*\\.\\.)[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "author": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contributors": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "license": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "repository": {
+      "type": "string",
+      "format": "uri"
+    },
+    "upstream": {
+      "type": "string",
+      "format": "uri"
+    },
+    "kinds": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "bar",
+          "bar-widget",
+          "menu",
+          "overlay",
+          "panel",
+          "service"
+        ]
+      }
+    },
+    "entryPoints": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?!/)(?!.*\\.\\.).+$"
+      }
+    },
+    "barWidget": {
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "allowMultiple": {
+          "type": "boolean"
+        },
+        "defaultSection": {
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ]
+        },
+        "defaults": {
+          "type": "object"
+        },
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "key",
+              "type",
+              "label"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": true,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kinds": {
+            "contains": {
+              "const": "bar-widget"
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "entryPoints": {
+            "required": [
+              "barWidget"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

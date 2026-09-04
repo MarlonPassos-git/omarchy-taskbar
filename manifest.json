@@ -1,10 +1,16 @@
 {
+  "$schema": "https://raw.githubusercontent.com/MarlonPassos-git/omarchy-taskbar/master/manifest.schema.json",
   "schemaVersion": 1,
   "id": "io.github.joeyvigil.taskbar",
   "name": "Taskbar",
   "version": "0.4.0",
-  "author": "Joey Vigil, Marlon Passos",
+  "author": "Joey Vigil",
+  "contributors": [
+    "Marlon Passos"
+  ],
   "license": "MIT",
+  "repository": "https://github.com/MarlonPassos-git/omarchy-taskbar",
+  "upstream": "https://github.com/joeyvigil/omarchy-taskbar",
   "description": "Pinned app icons with running indicators and optional dedicated named workspaces",
   "kinds": [
     "bar-widget"
