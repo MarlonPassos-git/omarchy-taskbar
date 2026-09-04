@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "io.github.joeyvigil.taskbar",
   "name": "Taskbar",
-  "version": "0.3.0",
-  "author": "Joey Vigil",
+  "version": "0.4.0",
+  "author": "Joey Vigil, Marlon Passos",
   "license": "MIT",
-  "description": "Pinned app icons in the bar with running-state indicators; pin and unpin from the bar itself",
+  "description": "Pinned app icons with running indicators and optional dedicated named workspaces",
   "kinds": [
     "bar-widget"
   ],
@@ -14,7 +14,7 @@
   },
   "barWidget": {
     "displayName": "Taskbar",
-    "description": "Pinned app icons with running indicators; left = launch or focus, right = actions, middle = new instance",
+    "description": "Pinned apps with running indicators and optional dedicated named workspaces",
     "category": "Launcher",
     "allowMultiple": false,
     "defaultSection": "left",

@@ -10,9 +10,10 @@ import "AppModel.js" as AppModel
 // Pinned application launcher for the Omarchy bar.
 //
 // Each pinned entry is one icon. Clicking launches the app, or focuses it when
-// it already has a window, so the strip doubles as a switcher. Windows are
-// matched to entries by app id / window class, which is also what drives the
-// running indicator under each icon.
+// it already has a window, so the strip doubles as a switcher. An entry can
+// also own a named workspace, keeping every matching window together however
+// the app was launched. Window matching drives both features and the running
+// indicator under each icon.
 //
 // Pinning is done from the bar itself: the trailing + opens an app picker and
 // right-clicking an icon opens its actions. Both borrow the Omarchy menu's
@@ -66,6 +67,7 @@ BarWidget {
         appId: toplevel.wayland ? String(toplevel.wayland.appId || "") : "",
         cls: String(ipc["class"] || ""),
         title: String(toplevel.title || ""),
+        workspace: toplevel.workspace ? String(toplevel.workspace.name || "") : "",
         toplevel: toplevel
       })
     }
@@ -73,6 +75,10 @@ BarWidget {
   }
 
   readonly property var windows: root.windowDescriptors()
+
+  onBarChanged: workspaceAssignmentTimer.restart()
+  onPinnedChanged: workspaceAssignmentTimer.restart()
+  Component.onCompleted: workspaceAssignmentTimer.restart()
 
   function entryById(desktopId) {
     var serial = root.entrySerial // binding dependency
@@ -321,6 +327,11 @@ BarWidget {
     if (index < 0) return
 
     var options = ["\tNew instance\tlaunch"]
+    if (record.workspace) {
+      options.push("󰆾\tRemove dedicated workspace (" + record.workspace + ")\tworkspace-off")
+    } else {
+      options.push("󰆾\tUse dedicated workspace\tworkspace-on")
+    }
     if (index > 0) options.push("\t" + (root.vertical ? "Move up" : "Move left") + "\tback")
     if (index < root.pinned.length - 1) options.push("\t" + (root.vertical ? "Move down" : "Move right") + "\tforward")
     options.push("\tUnpin\tunpin")
@@ -360,6 +371,11 @@ BarWidget {
         next.splice(index, 1)
         return next
       }
+      if (action === "workspace-on") {
+        var workspaceName = root.labelFor(current[index]) || current[index].key
+        return AppModel.updatedWorkspace(current, index, workspaceName)
+      }
+      if (action === "workspace-off") return AppModel.updatedWorkspace(current, index, "")
       if (action === "back") return AppModel.movedRecords(current, index, -1)
       if (action === "forward") return AppModel.movedRecords(current, index, 1)
       return null
@@ -379,6 +395,23 @@ BarWidget {
     }
   }
 
+  Timer {
+    id: workspaceAssignmentTimer
+    interval: 60
+    repeat: false
+    onTriggered: {
+      if (!root.bar) return
+      var peers = typeof root.bar.moduleWidgets === "function"
+        ? root.bar.moduleWidgets(root.moduleName) : [root]
+      if (peers.length > 0 && peers[0] !== root) return
+      var moves = AppModel.workspaceMoves(root.pinned, root.windows, root.activeAddress)
+      for (var i = 0; i < moves.length; i++) {
+        var dispatcher = AppModel.workspaceDispatcher(moves[i])
+        if (dispatcher) Hyprland.dispatch(dispatcher)
+      }
+    }
+  }
+
   IpcHandler {
     target: "io.github.joeyvigil.taskbar"
 
@@ -392,7 +425,11 @@ BarWidget {
     target: Hyprland
     function onRawEvent(event) {
       // openwindow, closewindow, movewindow, windowtitle, activewindow[v2].
-      if (String(event.name || "").indexOf("window") !== -1) root.windowSerial++
+      var name = String(event.name || "")
+      if (name.indexOf("window") !== -1) root.windowSerial++
+      if (name === "openwindow" || name.indexOf("windowtitle") === 0) {
+        workspaceAssignmentTimer.restart()
+      }
     }
   }
 
