@@ -5,6 +5,8 @@ manifest.json      plugin declaration and setting schema
 BarWidget.qml      the widget the bar mounts
 AppModel.js        entry normalization, window matching, list editing
 bin/taskbar-pick   shows a list in the Omarchy menu, prints the choice
+bin/test           runs the pure AppModel unit tests
+__tests__/         unit coverage for matching and workspace assignment
 ```
 
 Two things worth knowing before changing this code:
@@ -25,3 +27,9 @@ Files under `~/.config/omarchy/plugins/` hot-reload on save. If you develop from
 a checkout elsewhere and symlink it in, `inotify` won't see through the symlink
 — reload by hand with `omarchy-shell shell rescanPlugins`, and restart the
 shell outright when you touch anything settings-related.
+
+Run the complete test suite with:
+
+```bash
+./bin/test
+```

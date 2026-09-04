@@ -5,14 +5,15 @@ Pinned app icons for the [Omarchy](https://omarchy.org/) bar.
 Click an icon to launch the app — or to focus it, if it's already open. A small
 indicator under each icon shows what's running and which app you're in.
 
-Pin and unpin from the bar itself. No config file editing.
+Pin and unpin from the bar itself. Apps can optionally own a named workspace,
+also configured from the bar.
 
 ![The taskbar in the Omarchy bar](docs/bar.png)
 
 ## Install
 
 ```bash
-omarchy plugin add https://github.com/joeyvigil/omarchy-taskbar.git --enable --yes
+omarchy plugin add https://github.com/MarlonPassos-git/omarchy-taskbar.git --enable --yes
 omarchy bar move io.github.joeyvigil.taskbar --section left
 ```
 
@@ -25,7 +26,7 @@ Needs Omarchy 4+, with the built-in `omarchy.menu` plugin enabled.
 | **Left click** | Launch the app, or focus it if it's already running |
 | **Left click** (already focused) | Cycle to that app's next window |
 | **Middle click** | Always launch a new instance |
-| **Right click** | Actions: new instance, move left/right, unpin |
+| **Right click** | Actions: new instance, dedicated workspace, move left/right, unpin |
 | **Click the `+`** | Pin an app, from a searchable list of everything installed |
 | **Hover** | App name, plus window count when more than one is open |
 
@@ -34,6 +35,17 @@ Needs Omarchy 4+, with the built-in `omarchy.menu` plugin enabled.
 Pinning through the `+` also works out how to recognise that app's windows, so
 the running indicator just works — including for Omarchy web apps, which
 Chromium reports under names like `chrome-discord.com__channels_@me-Default`.
+
+## Dedicated workspaces
+
+Right-click an app and choose **Use dedicated workspace**. The plugin creates a
+named workspace from the app label and sends every newly opened matching window
+there, including apps started from a keyboard shortcut, launcher, or terminal.
+
+All instances share that workspace. The newly active window follows its move;
+background windows move silently. Existing matching windows are also assigned
+when the setting is enabled or the shell starts. Manual moves remain possible.
+The named workspace disappears naturally after its last window closes.
 
 ## Settings
 

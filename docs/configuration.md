@@ -46,6 +46,7 @@ The long form takes overrides:
 "apps": [
   "Alacritty",
   { "desktopId": "code", "match": "^Code$", "label": "Editor" },
+  { "desktopId": "obsidian", "workspace": "Notes" },
   { "label": "Scratch VM", "icon": "computer", "exec": "uwsm-app -- virt-manager", "match": "virt-manager" }
 ]
 ```
@@ -58,6 +59,17 @@ The long form takes overrides:
 | `icon` | Icon name or absolute path override. |
 | `label` | Tooltip override. |
 | `matchTitle` | Also match the regex against window titles. Off by default — titles produce false positives for browsers. |
+| `workspace` | Dedicated named workspace assigned when a matching window opens, regardless of how the app was launched. |
+
+Right-click a pinned icon and choose **Use dedicated workspace** to populate
+`workspace` from the app label. Choose **Remove dedicated workspace** to stop
+future automatic assignments. Edit the long-form value directly when you want a
+different workspace name.
+
+The plugin uses Hyprland's Lua window-move dispatcher. The active window follows
+the move; background windows move silently. Multiple matching windows share the
+same named workspace and keep the taskbar's normal click-to-cycle behavior.
+Moving one manually afterward does not trigger an automatic move back.
 
 ## Smart matching
 
