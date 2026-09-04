@@ -13,7 +13,7 @@ also configured from the bar.
 ## Install
 
 ```bash
-omarchy plugin add https://github.com/MarlonPassos-git/omarchy-taskbar.git --enable --yes
+omarchy plugin add https://github.com/joeyvigil/omarchy-taskbar.git --enable --yes
 omarchy bar move io.github.joeyvigil.taskbar --section left
 ```
 
@@ -82,9 +82,7 @@ This takes the pin list with it, for the same reason as above.
 - [Development notes](docs/development.md) — layout of the code, and two
   non-obvious things about the plugin host worth knowing before changing it.
 
-Run the complete AppModel suite with `./bin/test`. Feature changes are reviewed
-as a native GitHub stack: test infrastructure first, behavior second, and
-documentation plus metadata last.
+Run the complete AppModel suite with `./bin/test`.
 
 ## License
 
