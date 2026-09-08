@@ -1,6 +1,11 @@
-# Taskbar
+# Omarchy Taskbar Plus
 
-Pinned app icons for the [Omarchy](https://omarchy.org/) bar.
+> An independently maintained fork of [Joey Vigil's omarchy-taskbar](https://github.com/joeyvigil/omarchy-taskbar),
+> with optional dedicated workspaces for pinned apps. Thank you, Joey, for the
+> original app, the idea, and the excellent foundation this fork builds on.
+
+Pinned app icons for the [Omarchy](https://omarchy.org/) bar, with optional
+dedicated workspaces to keep each app's windows together.
 
 Click an icon to launch the app — or to focus it, if it's already open. A small
 indicator under each icon shows what's running and which app you're in.
@@ -13,11 +18,17 @@ also configured from the bar.
 ## Install
 
 ```bash
-omarchy plugin add https://github.com/joeyvigil/omarchy-taskbar.git --enable --yes
+omarchy plugin add https://github.com/MarlonPassos-git/omarchy-taskbar.git --enable --yes
 omarchy bar move io.github.joeyvigil.taskbar --section left
 ```
 
 Needs Omarchy 4+, with the built-in `omarchy.menu` plugin enabled.
+
+This fork retains the original plugin ID, `io.github.joeyvigil.taskbar`, for
+compatibility with existing settings and commands. Use either this fork or the
+original plugin; they cannot be installed side by side. Before switching an
+existing installation, back up its widget entry in `~/.config/omarchy/shell.json`
+so you can restore your pins and settings if needed.
 
 ## Using it
 
@@ -75,6 +86,9 @@ omarchy plugin remove io.github.joeyvigil.taskbar
 This takes the pin list with it, for the same reason as above.
 
 ## Changes
+
+**0.4.0 (Plus)** — Optional dedicated workspaces for pinned apps, configurable
+from the right-click menu. Includes the upstream 0.3.1 window-cycling fix.
 
 **0.3.1** — Clicking a pinned icon repeatedly now really does cycle through
 that app's windows. Focusing a window makes Hyprland warp the pointer to the
