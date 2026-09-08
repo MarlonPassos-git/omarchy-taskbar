@@ -1,0 +1,45 @@
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Manifest and QML
+    runs-on: ubuntu-latest
+    container: archlinux:base
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install lint dependencies
+        run: pacman -Syu --noconfirm --needed git jq qt6-declarative quickshell
+
+      - name: Check out plugin
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: plugin
+          persist-credentials: false
+
+      - name: Check out Omarchy validation tools and shell imports
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: omacom/omarchy
+          ref: 5b91db503c904bbfc5f34bdaaa9c708814958f3d # quattro, 2026-09-08
+          path: omarchy
+          persist-credentials: false
+
+      - name: Validate manifest and lint all QML
+        working-directory: plugin
+        env:
+          OMARCHY_PATH: ${{ github.workspace }}/omarchy
+        run: |
+          export PATH="$OMARCHY_PATH/bin:$PATH"
+          ./bin/lint
