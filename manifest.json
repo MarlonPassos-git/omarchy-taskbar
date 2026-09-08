@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "id": "io.github.joeyvigil.taskbar",
-  "name": "Taskbar",
+  "name": "Omarchy Taskbar Plus",
   "version": "0.4.0",
-  "author": "Joey Vigil",
+  "author": "Marlon Passos",
   "contributors": [
-    "Marlon Passos"
+    "Joey Vigil"
   ],
   "license": "MIT",
   "description": "Pinned app icons with running indicators and optional dedicated named workspaces",
@@ -16,7 +16,7 @@
     "barWidget": "BarWidget.qml"
   },
   "barWidget": {
-    "displayName": "Taskbar",
+    "displayName": "Taskbar Plus",
     "description": "Pinned apps with running indicators and optional dedicated named workspaces",
     "category": "Launcher",
     "allowMultiple": false,
