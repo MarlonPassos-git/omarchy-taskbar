@@ -128,17 +128,47 @@ BarWidget {
 
   // ------------------------------------------------------------- launch/focus
 
+  // The shell one-liner that focuses `descriptor` while holding the pointer
+  // still. Split out from focusWindow so it can be inspected directly.
+  function focusCommand(descriptor) {
+    // Quickshell reports the address bare ("55bd…"); Hyprland's dispatcher
+    // wants it prefixed. A bad address is only a warning there, exit 0, so
+    // getting this wrong fails silently rather than reaching the fallback.
+    var hex = String(descriptor.address || "")
+    var target = "address:" + (hex.indexOf("0x") === 0 ? hex : "0x" + hex)
+    var focusLua = 'hl.dsp.focus({ window = "' + target + '" })'
+    return "p=$(hyprctl cursorpos 2>/dev/null | tr -d ' '); "
+      // Hyprland's Lua parser rejects the legacy string form and exits 7,
+      // which is what selects the fallback on older, non-Lua configs.
+      + "hyprctl dispatch " + Util.shellQuote(focusLua) + " >/dev/null 2>&1 || "
+      + "hyprctl dispatch focuswindow " + Util.shellQuote(target) + " >/dev/null 2>&1; "
+      + 'case "$p" in *,*) hyprctl dispatch '
+      + '"hl.dsp.cursor.move({ x = ${p%%,*}, y = ${p#*,} })" >/dev/null 2>&1 ;; esac'
+  }
+
   function focusWindow(descriptor) {
     if (!descriptor) return
     var toplevel = descriptor.toplevel
-    // activate() goes through the compositor's own foreign-toplevel handling,
-    // which switches workspace for us and needs no dispatcher syntax.
-    if (toplevel && toplevel.wayland && typeof toplevel.wayland.activate === "function") {
-      toplevel.wayland.activate()
+
+    // Focusing warps the pointer to the centre of the target window, because
+    // Hyprland's cursor:no_warps defaults to false. That drags the pointer off
+    // the icon, so a second click lands on the window instead of the taskbar
+    // and cycling through an app's windows can never get past the first one.
+    //
+    // So capture the pointer, focus, and put the pointer back — all in one
+    // shell invocation. hyprctl dispatch returns only once the compositor has
+    // processed it, so the restore cannot race the warp. Landing the pointer
+    // back on the bar does not steal focus: it is a layer surface, and
+    // follow_mouse only refocuses when the pointer is over a window.
+    if (descriptor.address && root.bar && typeof root.bar.run === "function") {
+      root.bar.run(root.focusCommand(descriptor))
       return
     }
-    if (descriptor.address && root.bar) {
-      root.bar.run("hyprctl dispatch focuswindow " + root.bar.shellQuote("address:" + descriptor.address))
+
+    // No way to run commands: fall back to the compositor's own
+    // foreign-toplevel activation, which switches workspace but warps.
+    if (toplevel && toplevel.wayland && typeof toplevel.wayland.activate === "function") {
+      toplevel.wayland.activate()
     }
   }
 
@@ -155,7 +185,7 @@ BarWidget {
       return
     }
     if (root.bar) {
-      root.bar.run("uwsm-app -- gtk-launch " + root.bar.shellQuote(record.desktopId + ".desktop"))
+      root.bar.run("uwsm-app -- gtk-launch " + Util.shellQuote(record.desktopId + ".desktop"))
     }
   }
 
