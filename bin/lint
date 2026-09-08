@@ -1,0 +1,59 @@
+#!/bin/bash
+
+set -euo pipefail
+
+plugin_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+omarchy_path=${OMARCHY_PATH:-/usr/share/omarchy}
+
+fail() {
+  printf 'lint: %s\n' "$*" >&2
+  exit 1
+}
+
+command -v omarchy >/dev/null || fail "omarchy not found; add the Omarchy bin directory to PATH"
+command -v jq >/dev/null || fail "jq not found; install jq for manifest validation"
+[[ -d "$omarchy_path/shell/Ui" && -d "$omarchy_path/shell/Commons" ]] \
+  || fail "OMARCHY_PATH='$omarchy_path': expected an Omarchy directory containing shell/Ui and shell/Commons"
+
+omarchy_path=$(cd "$omarchy_path" && pwd)
+
+# Arch also installs Qt 5's qmllint on PATH. It rejects valid Qt 6 IPC return
+# types such as void; prefer the Qt 6 tool and verify overrides as well.
+qml_lint=${QMLLINT:-}
+if [[ -z $qml_lint ]]; then
+  for candidate in /usr/lib/qt6/bin/qmllint qmllint6 qmllint; do
+    if command -v "$candidate" >/dev/null; then
+      candidate_version=$("$candidate" --version 2>/dev/null) || continue
+      if [[ $candidate_version =~ ^qmllint[[:space:]]6\. ]]; then
+        qml_lint=$candidate
+        break
+      fi
+    fi
+  done
+fi
+[[ -n $qml_lint ]] || fail "Qt 6 qmllint not found; install qt6-declarative or set QMLLINT to its executable"
+qml_version=$("$qml_lint" --version) || fail "cannot run QMLLINT='$qml_lint'"
+[[ $qml_version =~ ^qmllint[[:space:]]6\. ]] \
+  || fail "QMLLINT='$qml_lint' reports '$qml_version'; expected qmllint 6.x"
+
+printf 'Validating plugin manifest and layout\n'
+omarchy plugin validate "$plugin_dir"
+
+# qs is Quickshell's runtime import prefix. Reproduce it outside the plugin:
+# the plugin validator correctly rejects symlinks inside the plugin itself.
+import_dir=$(mktemp -d)
+trap 'rm -rf -- "$import_dir"' EXIT
+ln -s "$omarchy_path/shell" "$import_dir/qs"
+find "$plugin_dir" -name .git -prune -o -type f -name '*.qml' -print0 \
+  | sort -z > "$import_dir/files"
+mapfile -d '' -t qml_files < "$import_dir/files"
+(( ${#qml_files[@]} > 0 )) || fail "no .qml files found in '$plugin_dir'"
+
+printf 'Linting %s QML file(s) with %s (%s)\n' "${#qml_files[@]}" "$qml_lint" "$qml_version"
+# The host exposes bar and Style groups as QObject, and delegates access outer
+# IDs. Keep these existing diagnostics visible without blocking this gate.
+# Other warnings, syntax errors and unresolved imports remain failures.
+"$qml_lint" --ignore-settings --max-warnings 0 \
+  --missing-property info --unqualified info \
+  -I "$import_dir" -I "$omarchy_path/shell" "$@" "${qml_files[@]}"
+printf 'Lint passed\n'
